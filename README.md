@@ -1,7 +1,7 @@
-# Gender_Classification
+# Gender Classification with Character CNN
 The software that is described in "Gender Prediction From Tweets With Convolutional Neural Networks" for PAN 2018
 
-Installation
+Installation & Execution
 ----------------------------------------------------
 
 1) You can reach the code with `git clone https://github.com/Darg-Iztech/Gender_Classification.git`
