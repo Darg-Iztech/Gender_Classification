@@ -16,7 +16,8 @@ def readCharEmbeddings(path, embedding_size):
     model_tuple = lambda: ((line[0], [float(value) for value in line[1:]]) for line in lines())
     model_dict = dict(model_tuple())
 
-    char_list = [int(char_number) for char_number in model_dict.keys() if len(model_dict[char_number]) == embedding_size]
+    char_list = [int(char_number) for char_number in model_dict.keys() if
+                 len(model_dict[char_number]) == embedding_size]
     vectors = [embed for embed in model_dict.values() if len(embed) == embedding_size]
 
     char_list.append(ord('U'))
@@ -34,29 +35,28 @@ def readGloveEmbeddings(path, embedding_size):
 
     lines = lambda: itertools.islice(in_file, DOC_LIMIT)
     model_tuple = lambda: ((line[0], [float(value) for value in line[1:]]) for line in lines())
-    
+
     model_dict = dict(model_tuple())
     temp_vocab = list(model_dict.keys())
     temp_vectors = list(model_dict.values())
 
     vocab = list()
     vectors = list()
-    #remove erratic embeddings
+    # remove erratic embeddings
     count = 0
 
     for line in temp_vectors:
-        if len(line) == embedding_size:#problem here FLAGS instead of emb_size param!!!
+        if len(line) == embedding_size:  # problem here FLAGS instead of emb_size param!!!
             vocab.append(temp_vocab[count])
             vectors.append(temp_vectors[count])
-        count +=1
+        count += 1
     del temp_vectors, temp_vocab, model_dict
-        
-    #add special tokens
+
+    # add special tokens
     vocab.append("UNK")
     vectors.append(np.random.randn(embedding_size))
     vocab.append("PAD")
     vectors.append(np.zeros(embedding_size))
-
 
     embeddings = np.array(vectors)
     return vocab, embeddings
@@ -70,53 +70,53 @@ def readGloveEmbeddings(path, embedding_size):
 #	 dict ("target_values") = author(key) - ground-truth(value) pairs
 #	 list ("seq-lengths")   = lenght of each tweet in the list "training_set"
 def readData(path, mode):
-	#zFile = zipfile.ZipFile(path)
-	path = path + "/" + FLAGS.lang + "/text"
-	tokenizer = TweetTokenizer()
-	training_set = []
-	target_values = {}
-	seq_lengths = []
+    # zFile = zipfile.ZipFile(path)
+    path = os.path.join(os.path.join(path, FLAGS.lang), "text")
+    tokenizer = TweetTokenizer()
+    training_set = []
+    target_values = {}
+    seq_lengths = []
 
-	# for each author
-	for name in os.listdir(path):
-	
-		if mode != "Test":
-			# ground truth values are here
-			if name.endswith(".txt"):
-				text = open(path + "/" + name, 'r')
+    # for each author
+    for name in os.listdir(path):
 
-				# each line = each author
-				for line in text:
-					words = line.strip().split(b':::')
-					if words[1].decode() == "female":
-						target_values[words[0].decode()] = [0, 1]
-					elif words[1].decode() == "male":
-						target_values[words[0].decode()] = [1, 0]
+        if mode != "Test":
+            # ground truth values are here
+            if name.endswith(".txt"):
+                file_name = os.path.join(path,name)
+                text = open(file_name, 'r', encoding="utf8")
 
-		# tweets are here
-		if name.endswith(".xml"):
+                # each line = each author
+                for line in text:
+                    words = line.strip().split(':::')
+                    if words[1] == "female":
+                        target_values[words[0]] = [0, 1]
+                    elif words[1] == "male":
+                        target_values[words[0]] = [1, 0]
 
-			# get author name from file name
-			base = os.path.basename(name)
-			author_id = os.path.splitext(base)[0]
+        # tweets are here
+        if name.endswith(".xml"):
 
-			# parse tweets
-			xmlFile = open(path + "/" + name, "r")
-			rootTag = xmlParser.parse(xmlFile).getroot()
+            # get author name from file name
+            base = os.path.basename(name)
+            author_id = os.path.splitext(base)[0]
 
-			# for each tweet
-			for documents in rootTag:
-				for document in documents.findall("document"):
-					words = tokenizer.tokenize(document.text)
-					training_set.append([author_id, words])  # author-tweet pairs
-					seq_lengths.append(len(words))  # length of tweets will be fed to rnn as timestep size
+            # parse tweets
+            xml_file_name = os.path.join(path,name)
+            xmlFile = open(xml_file_name, "r", encoding="utf8")
+            rootTag = xmlParser.parse(xmlFile).getroot()
 
-	if mode != "Test":
-		return training_set, target_values, seq_lengths
-	else:
-		return training_set, None, seq_lengths
+            # for each tweet
+            for documents in rootTag:
+                for document in documents.findall("document"):
+                    words = tokenizer.tokenize(document.text)
+                    training_set.append([author_id, words])  # author-tweet pairs
+                    seq_lengths.append(len(words))  # length of tweets will be fed to rnn as timestep size
 
-
+    if mode != "Test":
+        return training_set, target_values, seq_lengths
+    else:
+        return training_set, None, seq_lengths
 
 
 # takes list of tweet and list of characters
@@ -161,12 +161,12 @@ def prepTestData(tweets, user, target):
     return test_input, test_output
 
 
-
 def user2target(users, targets):
-	target_values = []
-	for user in users:
-		target_values.append(targets[user])
-	return target_values
+    target_values = []
+    for user in users:
+        target_values.append(targets[user])
+    return target_values
+
 
 # takes all tweets, users and targets
 # creates a batch as a list of characters according to given iteration no, batch size and
@@ -177,12 +177,12 @@ def prepCharBatchData(mode, tweets, users, targets, iter_no, batch_size, max_twe
 
     if end > len(tweets):
         end = len(tweets)
-        
+
     batch_tweets = tweets[start:end]
     batch_users = users[start:end]
 
     # prepare output
-    if mode!="Test":
+    if mode != "Test":
         batch_output = user2target(batch_users, targets)
     else:
         batch_output = None
@@ -206,21 +206,21 @@ def prepCharBatchData(mode, tweets, users, targets, iter_no, batch_size, max_twe
 
 # changes tokenized words to their corresponding ids in vocabulary
 def word2id(tweets, vocab):
-	batch_tweet_ids = []
-	for tweet in tweets:
-		tweet_ids = []
-		for word in tweet:
-			if word != "PAD":
-				word = word.lower()
+    batch_tweet_ids = []
+    for tweet in tweets:
+        tweet_ids = []
+        for word in tweet:
+            if word != "PAD":
+                word = word.lower()
 
-			try:
-				tweet_ids.append(vocab[word])
-			except:
-				tweet_ids.append(vocab["UNK"])
+            try:
+                tweet_ids.append(vocab[word])
+            except:
+                tweet_ids.append(vocab["UNK"])
 
-		batch_tweet_ids.append(tweet_ids)
-		
-	return batch_tweet_ids
+        batch_tweet_ids.append(tweet_ids)
+
+    return batch_tweet_ids
 
 
 # prepares batch data - also adds padding to tweets
@@ -233,40 +233,39 @@ def word2id(tweets, vocab):
 # 	  batch_output - target values to be fed to the rnn
 #	  batch_sequencelen - number of words in each tweet(gives us the # of time unrolls)
 def prepWordBatchData(mode, tweets, users, targets, seq_len, iter_no):
-	start = iter_no * FLAGS.batch_size
-	end = iter_no * FLAGS.batch_size + FLAGS.batch_size
-	if end > len(tweets):
-		end = len(tweets)
+    start = iter_no * FLAGS.batch_size
+    end = iter_no * FLAGS.batch_size + FLAGS.batch_size
+    if end > len(tweets):
+        end = len(tweets)
 
-	batch_tweets = tweets[start:end]
-	batch_users = users[start:end]
-	batch_sequencelen = seq_len[start:end]
+    batch_tweets = tweets[start:end]
+    batch_users = users[start:end]
+    batch_sequencelen = seq_len[start:end]
 
-	# prepare output
-	if mode != "Test":
-		batch_output_temp = user2target(batch_users, targets)
-		batch_output = batch_output_temp[0]
+    # prepare output
+    if mode != "Test":
+        batch_output_temp = user2target(batch_users, targets)
+        batch_output = batch_output_temp[0]
 
-	# prepare input by adding padding
-	tweet_lengths = [len(tweet) for tweet in batch_tweets]
-	max_tweet_length = max(tweet_lengths)
+    # prepare input by adding padding
+    tweet_lengths = [len(tweet) for tweet in batch_tweets]
+    max_tweet_length = max(tweet_lengths)
 
-	batch_input = []
-	for i in range(FLAGS.batch_size):
-		tweet = batch_tweets[i]
-		padded_tweet = []
-		for j in range(max_tweet_length):
-			if len(tweet) > j:
-				padded_tweet.append(tweet[j])
-			else:
-				padded_tweet.append("PAD")
-		batch_input.append(padded_tweet)
+    batch_input = []
+    for i in range(FLAGS.batch_size):
+        tweet = batch_tweets[i]
+        padded_tweet = []
+        for j in range(max_tweet_length):
+            if len(tweet) > j:
+                padded_tweet.append(tweet[j])
+            else:
+                padded_tweet.append("PAD")
+        batch_input.append(padded_tweet)
 
-	if mode != "Test":
-		return batch_input, np.asarray(batch_output).reshape(1, 2), batch_sequencelen
-	else:
-		return batch_input, None, batch_sequencelen
-
+    if mode != "Test":
+        return batch_input, np.asarray(batch_output).reshape(1, 2), batch_sequencelen
+    else:
+        return batch_input, None, batch_sequencelen
 
 
 #############################################################################################################
@@ -288,4 +287,3 @@ def prepTestData(tweets, user, target, max_tweet_size):
         test_input.append(tweet_char_list)
 
     return test_input, test_output
-

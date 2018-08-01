@@ -1,0 +1,2 @@
+Epoch 0 Batch 0 , Minibatch Loss= 0.460998147726 , Training Accuracy= 1.0
+Epoch 0 Batch 500 , Minibatch Loss= 32.9372623861 , Training Accuracy= 0.48
