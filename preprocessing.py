@@ -5,7 +5,7 @@ import zipfile
 import xml.etree.ElementTree as xmlParser
 from nltk.tokenize import TweetTokenizer
 import os
-
+import sys
 
 # takes char-embedding file path and returns character list and vectors, relatively. the order of character is used, with unichar() func. char value can be taken.
 def readCharEmbeddings(path, embedding_size):
@@ -70,7 +70,7 @@ def readGloveEmbeddings(path, embedding_size):
 #	 dict ("target_values") = author(key) - ground-truth(value) pairs
 #	 list ("seq-lengths")   = lenght of each tweet in the list "training_set"
 def readData(path, mode):
-    # zFile = zipfile.ZipFile(path)
+
     path = os.path.join(os.path.join(path, FLAGS.lang), "text")
     tokenizer = TweetTokenizer()
     training_set = []
@@ -84,15 +84,28 @@ def readData(path, mode):
             # ground truth values are here
             if name.endswith(".txt"):
                 file_name = os.path.join(path,name)
-                text = open(file_name, 'r', encoding="utf8")
 
-                # each line = each author
-                for line in text:
-                    words = line.strip().split(':::')
-                    if words[1] == "female":
-                        target_values[words[0]] = [0, 1]
-                    elif words[1] == "male":
-                        target_values[words[0]] = [1, 0]
+                if sys.version_info[0] < 3:
+                    text = open(file_name, 'r')
+
+                    # each line = each author
+                    for line in text:
+                        words = line.strip().split(b':::')
+                        if words[1].decode() == "female":
+                            target_values[words[0].decode()] = [0, 1]
+                        elif words[1].decode() == "male":
+                            target_values[words[0].decode()] = [1, 0]
+
+                else:
+                    text = open(file_name, 'r', encoding="utf8")
+
+                    # each line = each author
+                    for line in text:
+                        words = line.strip().split(':::')
+                        if words[1] == "female":
+                            target_values[words[0]] = [0, 1]
+                        elif words[1] == "male":
+                            target_values[words[0]] = [1, 0]
 
         # tweets are here
         if name.endswith(".xml"):
