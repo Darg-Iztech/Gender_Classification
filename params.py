@@ -3,8 +3,8 @@ class flags(object):
 
 	def __init__(self):
 		self.dev_sample_percentage = 0.1
-		self.word_embed_path = "C:\\Users\\polat\\Desktop\\PAN_files\\glove.twitter.27B.50d.txt"
-		self.char_embed_path = "C:\\Users\\polat\\Desktop\\Gender_Classification\\char_embeddings.27B.25d.txt"
+		self.word_embed_path = "./glove.twitter.27B.50d.txt"
+		self.char_embed_path = "./char_embeddings.27B.25d.txt"
 		self.model_path = "./models/cnnonly"
 		self.model_name = "model-14.ckpt"
 		self.log_path = "./runlogs_cnn.txt"
