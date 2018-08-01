@@ -116,7 +116,10 @@ def readData(path, mode):
 
             # parse tweets
             xml_file_name = os.path.join(path,name)
-            xmlFile = open(xml_file_name, "r", encoding="utf8")
+            if sys.version_info[0] < 3:
+                xmlFile = open(xml_file_name, "r")
+            else:
+                xmlFile = open(xml_file_name, "r", encoding="utf8") 
             rootTag = xmlParser.parse(xmlFile).getroot()
 
             # for each tweet
